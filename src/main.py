@@ -27,7 +27,6 @@ def format_elapsed(start_time):
         elapsed_string = "{}d{}".format(days, elapsed_string)
     return elapsed_string
 
-
 def make_hparams():
     return nkutil.HParams(
         # Data processing
@@ -38,7 +37,7 @@ def make_hparams():
         learning_rate=0.00005,
         learning_rate_warmup_steps=160,
         clip_grad_norm=0.0,  # no clipping
-        checks_per_epoch=4,
+        checks_per_epoch=1,
         step_decay_factor=0.5,
         step_decay_patience=5,
         max_consecutive_decays=3,  # establishes a termination criterion
@@ -47,10 +46,13 @@ def make_hparams():
         d_char_emb=64,
         char_lstm_input_dropout=0.2,
         # BERT and other pre-trained models
-        use_pretrained=False,
-        pretrained_model="bert-base-uncased",
+        ## use_pretrained=False,
+        ## pretrained_model="bert-base-uncased",
+        use_pretrained=True,
+        pretrained_model="bert-base-chinese",
         # Partitioned transformer encoder
-        use_encoder=False,
+        ## use_encoder=False,
+        use_encoder=True,
         d_model=1024,
         num_layers=8,
         num_heads=8,
@@ -75,17 +77,11 @@ def run_train(args, hparams):
     if args.numpy_seed is not None:
         print("Setting numpy random seed to {}...".format(args.numpy_seed))
         np.random.seed(args.numpy_seed)
-
-    # Make sure that pytorch is actually being initialized randomly.
-    # On my cluster I was getting highly correlated results from multiple
-    # runs, but calling reset_parameters() changed that. A brief look at the
-    # pytorch source code revealed that pytorch initializes its RNG by
-    # calling std::random_device, which according to the C++ spec is allowed
-    # to be deterministic.
+        
     seed_from_numpy = np.random.randint(2147483648)
     print("Manual seed for pytorch:", seed_from_numpy)
     torch.manual_seed(seed_from_numpy)
-
+ 
     hparams.set_from_args(args)
     print("Hyperparameters:")
     hparams.print()
@@ -94,7 +90,7 @@ def run_train(args, hparams):
     train_treebank = treebanks.load_trees(
         args.train_path, args.train_path_text, args.text_processing
     )
-    if hparams.max_len_train > 0:    
+    if hparams.max_len_train > 0:    ## 0
         train_treebank = train_treebank.filter_by_length(hparams.max_len_train)
     print("Loaded {:,} training examples.".format(len(train_treebank)))
 
@@ -102,7 +98,7 @@ def run_train(args, hparams):
     dev_treebank = treebanks.load_trees(
         args.dev_path, args.dev_path_text, args.text_processing
     )
-    if hparams.max_len_dev > 0:   
+    if hparams.max_len_dev > 0:   ## 0
         dev_treebank = dev_treebank.filter_by_length(hparams.max_len_dev)
     print("Loaded {:,} development examples.".format(len(dev_treebank)))
 
@@ -114,12 +110,13 @@ def run_train(args, hparams):
         char_vocab = None
 
     tag_vocab = set()
+
     for tree in train_treebank.trees:
+        # print('tree.pos:', tree.pos)
         for _, tag in tree.pos():
             tag_vocab.add(tag)
     tag_vocab = ["UNK"] + sorted(tag_vocab)
     tag_vocab = {label: i for i, label in enumerate(tag_vocab)}
-    
 
     if hparams.force_root_constituent.lower() in ("true", "yes", "1"):
         hparams.force_root_constituent = True
@@ -149,6 +146,7 @@ def run_train(args, hparams):
     trainable_parameters = [
         param for param in parser.parameters() if param.requires_grad
     ]
+
     optimizer = torch.optim.Adam(
         trainable_parameters, lr=hparams.learning_rate, betas=(0.9, 0.98), eps=1e-9
     )
@@ -172,6 +170,7 @@ def run_train(args, hparams):
     current_processed = 0
     check_every = len(train_treebank) / hparams.checks_per_epoch
     best_dev_fscore = -np.inf
+    
     best_dev_model_path = None
     best_dev_processed = 0
 
@@ -291,7 +290,7 @@ def run_train(args, hparams):
             print("Terminating due to lack of improvement in dev fscore.")
             break
 
-
+##############################################################################################
 def run_test(args):
     print("Loading test trees from {}...".format(args.test_path))
     test_treebank = treebanks.load_trees(
@@ -316,7 +315,7 @@ def run_test(args):
     elif torch.cuda.is_available():
         parser.cuda()
 
-    print("Test...")
+    print("Parsing test sentences...")
     start_time = time.time()
 
     test_predicted = parser.parse(
@@ -332,7 +331,14 @@ def run_test(args):
             for tree in test_predicted:
                 outfile.write("{}\n".format(tree.pformat(margin=1e100)))
 
-    
+    # The tree loader does some preprocessing to the trees (e.g. stripping TOP
+    # symbols or SPMRL morphological features). We compare with the input file
+    # directly to be extra careful about not corrupting the evaluation. We also
+    # allow specifying a separate "raw" file for the gold trees: the inputs to
+    # our parser have traces removed and may have predicted tags substituted,
+    # and we may wish to compare against the raw gold trees to make sure we
+    # haven't made a mistake. As far as we can tell all of these variations give
+    # equivalent results.
     ref_gold_path = args.test_path
     if args.test_path_raw is not None:
         print("Comparing with raw trees from", args.test_path_raw)
@@ -351,6 +357,58 @@ def run_test(args):
     )
 
 
+
+#####################################################################################################
+def run_auto_labels(args):
+    print("Loading test trees from {}...".format(args.test_path))
+    test_treebank = treebanks.load_trees(
+        args.test_path, args.test_path_text, args.text_processing
+    )
+    print("Loaded {:,} test examples.".format(len(test_treebank)))
+
+    if len(args.model_path) != 1:
+        raise NotImplementedError(
+            "Ensembling multiple parsers is not "
+            "implemented in this version of the code."
+        )
+
+    model_path = args.model_path[0]
+    print("Loading model from {}...".format(model_path))
+    parser = parse_chart.ChartParser.from_trained(model_path)
+    if args.no_predict_tags and parser.f_tag is not None:
+        print("Removing part-of-speech tagging head...")
+        parser.f_tag = None
+    if args.parallelize:
+        parser.parallelize()
+    elif torch.cuda.is_available():
+        parser.cuda()
+
+    print("Parsing test sentences...")
+    start_time = time.time()
+
+    test_predicted = parser.parse(
+        test_treebank.without_gold_annotations(),
+        subbatch_max_tokens=args.subbatch_max_tokens,
+    )
+
+    # if args.output_path == "-":
+    #     for tree in test_predicted:
+    #         print(tree.pformat(margin=1e100))
+    # elif args.output_path:
+    #     with open(args.output_path, "w") as outfile:
+    #         for tree in test_predicted:
+    #             outfile.write("{}\n".format(tree.pformat(margin=1e100)))
+
+    ref_gold_path = args.test_path
+    if args.test_path_raw is not None:
+        print("Comparing with raw trees from", args.test_path_raw)
+        ref_gold_path = args.test_path_raw
+
+
+    import seq_with_label
+    seq_with_label.output(args.output_path, test_predicted)
+
+
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -362,9 +420,9 @@ def main():
     subparser.add_argument("--numpy-seed", type=int)
     subparser.add_argument("--model-path-base", required=True)
     subparser.add_argument("--evalb-dir", default="EVALB/")
-    subparser.add_argument("--train-path", default="data/prosody/train.txt")
+    subparser.add_argument("--train-path", default="data/train/tree_data/tree_train.txt")
     subparser.add_argument("--train-path-text", type=str)
-    subparser.add_argument("--dev-path", default="data/prosody/validate.txt")
+    subparser.add_argument("--dev-path", default="data/train/tree_data/tree_validate.txt")
     subparser.add_argument("--dev-path-text", type=str)
     subparser.add_argument("--text-processing", default="chinese")
     subparser.add_argument("--subbatch-max-tokens", type=int, default=2000)
@@ -375,7 +433,7 @@ def main():
     subparser.set_defaults(callback=run_test)
     subparser.add_argument("--model-path", nargs="+", required=True)
     subparser.add_argument("--evalb-dir", default="EVALB/")
-    subparser.add_argument("--test-path", default="data/prosody/test.txt")
+    subparser.add_argument("--test-path", default="data/train/tree_data/tree_test.txt")
     subparser.add_argument("--test-path-text", type=str)
     subparser.add_argument("--test-path-raw", type=str)
     subparser.add_argument("--text-processing", default="chinese")
@@ -383,6 +441,21 @@ def main():
     subparser.add_argument("--parallelize", action="store_true")
     subparser.add_argument("--output-path", default="")
     subparser.add_argument("--no-predict-tags", action="store_true")
+
+
+    subparser = subparsers.add_parser("auto_labels")
+    subparser.set_defaults(callback=run_auto_labels)
+    subparser.add_argument("--model-path", nargs="+", required=True)
+    subparser.add_argument("--evalb-dir", default="EVALB/")
+    subparser.add_argument("--test-path", default="data/inference/tree_data/tree_data.txt")
+    subparser.add_argument("--test-path-text", type=str)
+    subparser.add_argument("--test-path-raw", type=str)
+    subparser.add_argument("--text-processing", default="default")
+    subparser.add_argument("--subbatch-max-tokens", type=int, default=500)
+    subparser.add_argument("--parallelize", action="store_true")
+    subparser.add_argument("--output-path", default="")
+    subparser.add_argument("--no-predict-tags", action="store_true")
+
 
     args = parser.parse_args()
     args.callback(args)
