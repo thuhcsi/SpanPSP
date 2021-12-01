@@ -1,5 +1,5 @@
 # SpanPSP
-The pretrained models will be released soon.
+This repository contains code accompanying the paper **"A CHARACTER-LEVEL SPAN-BASED MODEL FOR MANDARIN PROSODIC STRUCTURE PREDICTION"** which is submitted to ICASSP 2022.
 
 ## Environment
 * Python 3.7 or higher.
@@ -8,17 +8,81 @@ The pretrained models will be released soon.
 * pytokenizations 0.7.2 or compatible.
 
 ## Repository structure
-![image](https://user-images.githubusercontent.com/70370966/142816162-726ac560-cc82-4d04-820c-270c59e53e1d.png)
+```
+SpanPSP
+├──bert-base-chinese
+|   ├──config.json
+|   ├──pytorch_model.bin
+|   └──vocab.txt
+├──data
+|   ├──train
+|   |   ├──raw_data
+|   |   |   ├──raw_train.txt
+|   |   |   ├──raw_validate.txt
+|   |   |   └──raw_test.txt
+|   |   └──tree_data
+|   |       ├──tree_train.txt
+|   |       ├──tree_validate.txt
+|   |       └──tree_test.txt
+|   └──inference
+|       ├──raw_data
+|       |   └──raw_data.txt
+|       ├──tree_data
+|           └──tree_data.txt
+├──models
+|   ├──pretrained_model
+|   |   └──pretrained_SpanPSP.pt
+|   └──yours
+├──src
+|   ├──benepar
+|       ├── ...
+|   ├──count_fscore.py
+|   ├──evaluate.py
+|   ├──export.py
+|   ├──inference_seq2tree.py
+|   ├──learning_rate.py
+|   ├──main.py
+|   ├──seq_with_label.py
+|   ├──train_seq2tree.py
+|   ├──transliterate.py
+|   ├──treebank.py
+├──README.md
+```
 
 
-## Training and test with your dataset (soon)
+## Training and test with your dataset
 ### Data preprocessing
+First prepare your own dataset into the following format, and divide it into training, validation and test named __*raw_train.txt*__, __*raw_validate.txt*__ and __*raw_test.txt*__ respectively.
+Put them in the right place as shown in the above repository structure.
+> 猴子#2用#1尾巴#2荡秋千#3。
 
+Then use the following command to convert the data of the three above files from sequence format to tree format by changing the file path in the code respectively.
+After that, you can get the __*tree_train.txt*__, __*tree_validate.txt*__ and __*tree_test.txt*__. 
+```
+$ python src/train_seq2tree.py
+```
 ### Training
-
+Train your model using:
+```
+$ python src/main.py  train  --train-path [your_training_data_path]  --dev-path [your_dev_data_path]  --model-path-base [your_saving_model_path] 
+```
 ### Test
-
-## Using the pre-trained model to automatically label the prosody structure of text data (soon)
+Test your model using:
+```
+$ python src/main.py  test  --model-path [your_trained_model_path]  --test-path [your_test_data_path]
+```
+## Using the pretrained model to automatically label the prosody structure of text data
 ### Data preprocessing
+First prepare your own dataset into the following format, and put it in the right place as shown in the repository structure.
+> 猴子用尾巴荡秋千。
 
+Then use the following command to convert the dataset from sequence format to tree format:
+```
+$ python src/inference_seq2tree.py
+```
+### Download the pretrained model
+The pretrained model will be released soon.
 ### Automatic labeling
+```
+$ python src/main.py  auto_labels  --model-path [your_pretrained_model_path]  --test-path [your_test_data_path]  --output-path [your_output_data_path]
+```
