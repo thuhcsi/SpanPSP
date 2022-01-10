@@ -8,6 +8,11 @@ The accuracy of prosodic structure prediction is crucial to the naturalness of s
 
 # Subjective Evaluation
 
+We further conduct an AB preference test on the naturalness of the synthesized speech. We compare our proposed model Transformer-Tree with the baseline Transformer-CRF (the previous state-of-the-art model). A set of 20 sentences are randomly selected from the test set with different prosodic structure prediction results and corresponding speeches are generated through a Tacotron 2 TTS model. A group of 20 subjects are asked to give their preference in terms of the naturalness for each speech. The percentage preference is shown in the following figure. We can clearly see that the proposed model Transformer-Tree is significantly better than the baseline model Transformer-CRF in terms of the naturalness of synthesized speech.
+
+<img src="./wavs/ABX.png" width="60%">
+
+
 |         |    Method     | Chinese text / Prosodic structure label | Audio |
 |:--|:---------|:---------------------------------------|:------|
 | 1 | Baseline | 中国是禁止涉外婚介的，不信你可以上网查查。<br> _0_1_2_0_1_0_1_0_0_3，_0_0_2_0_1_0_1_0_3。 <br> zhong1 - guo2 ` shi4 / jin4 - zhi3 ` she4 - wai4 ` hun1 - jie4 - de5 , bu2 - xin4 - ni3 / ke6 - yi3 ` shang4 - wang3 ` cha2 - cha5 . |<audio controls><source src="./wavs/Baseline/b01.wav" type="audio/wav">Your browser does not support the audio element.</audio> |
