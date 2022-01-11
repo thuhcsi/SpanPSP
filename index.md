@@ -12,7 +12,10 @@ We further conduct an ABX preference test on the naturalness of the synthesized 
 
 <img src="./wavs/ABX.png" width="60%">
 
-Details of the 20 sentences used in the ABX preference test are as follows. Among them, each sentence contains 3 lines. The first line is the sequence of Chinese characters. The second line is the corresponding prosodic structure label sequence (**'&#95;' means the corresponding Chinese character, '0' means the inside of a prosodic word (PW), '1' means the end of a prosodic word (PW), '2' means the end of a prosodic phrase (PPH), '3' means the end of a intonation phrase (IPH)**). The third line is the pinyin sequence with the prosodic structure label information, which is the input to the TTS model.
+Details of the 20 sentences used in the ABX preference test are as follows. Among them, each sentence contains 3 lines. 
+- The first line is the sequence of Chinese characters. 
+- The second line is the corresponding prosodic structure label sequence, where **'&#95;' denotes Chinese character, '0' denotes no boundary, '1' denotes prosodic word boundary (PW), '2' denotes prosodic phrase boundary (PPH), '3' denotes intonational phrase boundary (IPH)**. 
+- The third line is the pinyin sequence with the prosodic structure label information, which is the input to the TTS model.
 
 |         |    Method     | Chinese text / Prosodic structure label | Audio |
 |:--|:---------|:---------------------------------------|:------|
