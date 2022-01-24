@@ -1,6 +1,6 @@
 remote_theme: thuhcsi/slate
-title: A CHARACTER-LEVEL SPAN-BASED MODEL FOR MANDARIN PROSODIC STRUCTURE PREDICTION
-description: submitted to ICASSP 2022.
-show_downloads: true
+title: A Character-Level Span-based Model for Mandarin Prosodic Structure Prediction
+description: Published on ICASSP 2022
+show_downloads: false
 google_analytics:
 theme: jekyll-theme-cayman
