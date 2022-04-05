@@ -100,9 +100,9 @@ After that, you can get the __*tree_data.txt*__.
 ### inference
 Inference with your data using:
 ```
-$ python src/main.py  auto_labels  --model-path [your_pretrained_model_path]  --test-path [your_test_data_path]  --output-path [your_output_data_path]
+$ python src/main.py  inference  --model-path [your_pretrained_model_path]  --test-path [your_test_data_path]  --output-path [your_output_data_path]
 ```
 For example:
 ```
-$ python src/main.py  auto_labels  --model-path models/pretrained_model/pretrained_SpanPSP_Databaker.pt  --test-path data/inference/tree_data/tree_data.txt  --output-path data/inference/output_data.txt
+$ python src/main.py  inference  --model-path models/pretrained_model/pretrained_SpanPSP_Databaker.pt  --test-path data/inference/tree_data/tree_data.txt  --output-path data/inference/output_data.txt
 ```
