@@ -443,7 +443,7 @@ def main():
     subparser.add_argument("--no-predict-tags", action="store_true")
 
 
-    subparser = subparsers.add_parser("auto_labels")
+    subparser = subparsers.add_parser("inference")
     subparser.set_defaults(callback=run_auto_labels)
     subparser.add_argument("--model-path", nargs="+", required=True)
     subparser.add_argument("--evalb-dir", default="EVALB/")
