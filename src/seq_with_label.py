@@ -51,7 +51,11 @@ def replace2(a):
     compileX = re.compile(r'\d+')
     num_result = compileX.findall(s)
     for i in num_result:
-        s = re.sub(i, '#'+ str(max(i)), s, 1)
+        if i != '1':
+            s = re.sub(i, '#'+ str(max(i)), s, 1)
+    s = re.sub('#1', '##', s)
+    s = re.sub('1','#1', s)
+    s = re.sub('##','#1',s)
     
     s = s.replace('(n ', '')
     s = s.replace(')', '')
