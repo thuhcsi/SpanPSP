@@ -19,9 +19,7 @@ SpanPSP
 ├──data
 |   ├──train
 |   |   ├──raw_data
-|   |   |   ├──raw_train.txt
-|   |   |   ├──raw_validate.txt
-|   |   |   └──raw_test.txt
+|   |   |   └──raw_data.txt
 |   |   └──tree_data
 |   |       ├──tree_train.txt
 |   |       ├──tree_validate.txt
@@ -33,7 +31,7 @@ SpanPSP
 |           └──tree_data.txt
 ├──models
 |   ├──pretrained_model
-|   |   └──pretrained_SpanPSP.pt
+|   |   └──pretrained_SpanPSP_Databaker.pt
 |   └──yours
 ├──src
 |   ├──benepar
@@ -45,46 +43,66 @@ SpanPSP
 |   ├──learning_rate.py
 |   ├──main.py
 |   ├──seq_with_label.py
-|   ├──train_seq2tree.py
+|   ├──train_raw2tree.py
 |   ├──transliterate.py
 |   ├──treebank.py
 ├──README.md
 ```
 
+## Download pretrained model
+You can download the pre-trained models from the link below and put them in the right place as shown in the repository structure.
+* ### bert-base-chinese
+> Link: https://huggingface.co/bert-base-chinese
+* ### SpanPSP_Databaker
+> Link: https://pan.baidu.com/s/1zgXHgRnUY_J2IDSEEq2J0w
+
+> Password: w7d8
+
 
 ## Training and test with your dataset
 ### Data preprocessing
-First prepare your own dataset into the following format, and divide it into training, validation and test named __*raw_train.txt*__, __*raw_validate.txt*__ and __*raw_test.txt*__ respectively.
-Put them in the right place as shown in the above repository structure.
+First prepare your own dataset into the following format, and put it (__*raw_data.txt*__) in the right place as shown in the above repository structure.
 > 猴子#2用#1尾巴#2荡秋千#3。
 
-Then use the following command to convert the data of the three above files from sequence format to tree format by changing the file path in the code respectively.
+Then use the following command to convert the data of the above raw file from sequence format to tree format, and devide it into training, validation, and test with the ratio of 8:1:1.
+```
+$ python src/train_raw2tree.py
+```
 After that, you can get the __*tree_train.txt*__, __*tree_validate.txt*__ and __*tree_test.txt*__. 
-```
-$ python src/train_seq2tree.py
-```
 ### Training
 Train your model using:
 ```
 $ python src/main.py  train  --train-path [your_training_data_path]  --dev-path [your_dev_data_path]  --model-path-base [your_saving_model_path] 
+```
+For example:
+```
+$ python src/main.py  train  --train-path data/train/tree_data/tree_train.txt  --dev-path data/train/tree_data/tree_validate.txt  --model-path-base models/my_model 
 ```
 ### Test
 Test your model using:
 ```
 $ python src/main.py  test  --model-path [your_trained_model_path]  --test-path [your_test_data_path]
 ```
-## Using the pretrained model to automatically label the prosody structure of text data
+For example:
+```
+$ python src/main.py  test  --model-path models/my_model.pt  --test-path data/train/tree_data/tree_test.txt
+```
+## Inference
 ### Data preprocessing
-First prepare your own dataset into the following format, and put it in the right place as shown in the repository structure.
+First prepare your own dataset into the following format, and put it (__*raw_data.txt*__) in the right place as shown in the repository structure.
 > 猴子用尾巴荡秋千。
 
 Then use the following command to convert the dataset from sequence format to tree format:
 ```
 $ python src/inference_seq2tree.py
 ```
-### Download the pretrained model
-The pretrained model will be released soon.
-### Automatic labeling
+After that, you can get the __*tree_data.txt*__. 
+### inference
+Inference with your data using:
 ```
 $ python src/main.py  auto_labels  --model-path [your_pretrained_model_path]  --test-path [your_test_data_path]  --output-path [your_output_data_path]
+```
+For example:
+```
+$ python src/main.py  auto_labels  --model-path models/pretrained_model/pretrained_SpanPSP_Databaker.pt  --test-path data/inference/tree_data/tree_data.txt  --output-path data/inference/output_data.txt
 ```
