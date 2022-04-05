@@ -272,7 +272,6 @@ class SpanClassificationMarginLoss(nn.Module):
         augment = (1 - gold_event).to(torch.float)  
 
         if self.force_root_constituent:
-            print('lengths-1:',lengths-1)
             augment[torch.arange(augment.shape[0]), 0, lengths - 1, 0] -= 1e9
         dist = torch_struct.TreeCRF(logits + augment, lengths=lengths)
 
