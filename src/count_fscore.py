@@ -188,7 +188,7 @@ def count(gold_path, predicted_path):
                     if p[j] == '3':
                         a33 += 1
    
-    precision1, recall1, fscore1 = score(a11 + a12 + a13 + a21 + a22 + a23 + a31 + a32 + a33, a01 , a10 + a20 + a30) 
+    precision1, recall1, fscore1 = score(a11 + a12 + a13 + a21 + a22 + a23 + a31 + a32 + a33, a01 + a02 + a03 , a10 + a20 + a30) 
     precision2, recall2, fscore2 = score(a22 + a23 + a32 + a33, a02 + a03 + a12 + a13, a20 + a21 + a30 + a31) 
     precision3, recall3, fscore3 = score(a33, a03 + a13 + a23, a30 + a31 + a32)
     precision = float((precision1 + precision2 + precision3) *100 /3 )
