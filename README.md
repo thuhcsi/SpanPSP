@@ -53,10 +53,10 @@ SpanPSP
 You can download the pre-trained models from the link below and put them in the right place as shown in the repository structure.
 * ### bert-base-chinese
 > Link: https://huggingface.co/bert-base-chinese
-* ### SpanPSP_Databaker
-> Link: https://pan.baidu.com/s/1zgXHgRnUY_J2IDSEEq2J0w
+* ### SpanPSP_Databaker，SpanPSP_PeopleDaily
+> Link: https://pan.baidu.com/s/1bwwFbyP1WoEr3fLbbGeXpQ
 
-> Password: w7d8
+> Password: 9r2h
 
 
 ## Training and test with your dataset
